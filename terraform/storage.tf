@@ -1,5 +1,5 @@
 module "blobstorage" {
-  source = "../../terraform-modules/terraform-azurerm-storage/"
+  source = "../terraform-modules/terraform-azurerm-storage/"
 
   name         = var.blob_storage_account_name
   storage_rsg  = azurerm_resource_group.dev_common.name
