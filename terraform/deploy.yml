@@ -1,0 +1,72 @@
+variables:
+- group: vazbu001ftomd_common_vg
+- group: vazbu001ftomd-network_vg
+  
+trigger:
+- none
+
+resources:
+  repositories:
+  - repository: terraform-modules
+    type: git
+    name: Azure/terraform-modules
+  - repository: arm-templates
+    type: git
+    name: Azure/arm-templates
+    
+stages:
+  - stage: BuildPlan
+    displayName: "BuildPlan"
+    jobs:
+      - job: BuildPlan
+        continueOnError: false
+        steps:
+          - checkout: self
+          - checkout: terraform-modules
+          - checkout: arm-templates
+          # - script: ls $(Build.SourcesDirectory)
+          # - script: ls $(Build.SourcesDirectory)
+          # - script: ls $(Build.SourcesDirectory)/$(Build.Repository.Name)
+          - template: '../templates/azure-pipelines-templates/tf-init.yaml'
+            parameters:
+              message: 'Finished running terraform init'
+          - template: '../templates/azure-pipelines-templates/tf-validate.yaml'
+            parameters:
+              message: 'Finished running terraform validate'
+          - template: '../templates/azure-pipelines-templates/tf-plan.yaml'
+            parameters:
+              message: 'Finished running terraform plan'
+
+  - stage: Approve
+    displayName: "Approve"
+    pool: server
+    jobs:
+      - job: Approve
+        steps:
+        - task: ManualValidation@0
+          timeoutInMinutes: 60
+          inputs:
+            instructions: 'Approve to proceed'
+            onTimeout: 'reject'
+              
+  - stage: Deploy
+    displayName: "Deploy"
+    jobs:
+      - deployment: Deploy
+        environment: 'vazbu001ftomd'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - checkout: terraform-modules
+                - checkout: arm-templates
+                # - script: ls $(Build.SourcesDirectory)
+                # - script: ls $(Build.SourcesDirectory)
+                # - script: ls $(Build.SourcesDirectory)/$(Build.Repository.Name)
+                - template: '../templates/azure-pipelines-templates/tf-init.yaml'
+                  parameters:
+                    message: 'Finished running terraform init'
+                - template: '../templates/azure-pipelines-templates/tf-apply.yaml'
+                  parameters:
+                    message: 'Finished running terraform apply'
