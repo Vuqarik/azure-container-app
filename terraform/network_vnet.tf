@@ -1,5 +1,5 @@
 module "dev_vnet" {
-  source = "../../terraform-modules/terraform-azurerm-vnet"
+  source = "../erraform-modules/terraform-azurerm-vnet"
 
   vnet_rsg           = azurerm_resource_group.dev_infra.name
   vnet_name          = var.bu_vnet_name
